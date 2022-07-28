@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context" xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!-- bean definitions here -->
+    <context:component-scan base-package="com.dzh"/>
+
+<!--  引入jdbc配置文件  -->
+    <context:property-placeholder location="classpath:jdbc.properties"/>
+<!--  配置数据源  -->
+
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="driverClassName" value="${jdbc.driver}"/>
+    </bean>
+<!-- 配置SqlSessionFactory  -->
+    <bean id="sqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- 引入数据源 -->
+        <property name="dataSource" ref="dataSource"/>
+<!--        <property name="configLocation" value="classpath:mybatis-config.xml"/>-->
+
+        <property name="mapperLocations" value="classpath:mapper/*.xml"/>
+
+        <!-- pageHelper -->
+        <property name="plugins">
+            <array>
+                <bean class="com.github.pagehelper.PageInterceptor">
+                    <property name="properties">
+                        <!-- config params as the following -->
+                        <value>
+                            param1=value1
+                        </value>
+                    </property>
+                </bean>
+            </array>
+        </property>
+
+    </bean>
+    <!--  扫描mapper接口，生成代理对象  -->
+    <bean id="mapperScannerConfigurer" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.dzh.mapper"/>
+    </bean>
+
+
+</beans>
