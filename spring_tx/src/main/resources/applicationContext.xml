@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx" xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd
+
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!-- bean definitions here -->
+    <context:component-scan base-package="com.dzh"/>
+
+<!--  引入jdbc配置文件  -->
+    <context:property-placeholder location="classpath:jdbc.properties"/>
+<!--  配置数据源  -->
+
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="driverClassName" value="${jdbc.driver}"/>
+    </bean>
+<!-- 配置SqlSessionFactory  -->
+    <bean id="sqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- 引入数据源 -->
+        <property name="dataSource" ref="dataSource"/>
+<!--        <property name="configLocation" value="classpath:mybatis-config.xml"/>-->
+
+        <property name="mapperLocations" value="classpath:mapper/*.xml"/>
+
+    </bean>
+    <!--  扫描mapper接口，生成代理对象  -->
+    <bean id="mapperScannerConfigurer" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.dzh.mapper"/>
+    </bean>
+
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!--     创建UserServiceAdvice对象 -->
+    <bean id="accountService" class="com.dzh.service.impl.AccountServiceImpl">
+        <property name="accountMapper" ref="accountMapper"/>
+    </bean>
+
+    <bean id="accountAdvice" class="com.dzh.advice.AccountAdvice"/>
+
+    <aop:aspectj-autoproxy/>
+
+    <!-- 配置事务 -->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="transfer" isolation="DEFAULT" propagation="REQUIRED"/>
+        </tx:attributes>
+    </tx:advice>
+
+
+    <aop:config>
+        <aop:pointcut id="txPc" expression="execution(* com.dzh.service.impl.*ServiceImpl.*(..))"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="txPc"/>
+        <aop:aspect ref="accountAdvice">
+            <aop:after-throwing method="after_throwing" pointcut-ref="txPc"/>
+            <aop:around method="around" pointcut-ref="txPc"/>
+        </aop:aspect>
+    </aop:config>
+</beans>
