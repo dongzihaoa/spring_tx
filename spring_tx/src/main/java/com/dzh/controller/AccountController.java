@@ -24,11 +24,11 @@ public class AccountController {
     /**
      * 转账 fromAccount 给 toAccount 转账 money
      * @param fromAccount 转出
-     * @param toAccount 转入
+     * @param toAccounts 转入 1
      * @param money 金额
      */
-    public void transfer(Integer fromAccount, Integer toAccount, Double money) {
-        accountService.transfer(fromAccount,toAccount,money);
+    public void transfer(Integer fromAccount, Integer toAccounts, Double money) {
+        accountService.transfer(fromAccount,toAccounts,money);
     }
 
 }
